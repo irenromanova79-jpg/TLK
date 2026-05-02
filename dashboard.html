@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дашборд менеджеров</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #1c2430;
+    --border: #21262d;
+    --border2: #30363d;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #6e7681;
+    --gold: #e3a03a;
+    --gold2: #f0c060;
+    --gold-dim: rgba(227,160,58,0.12);
+    --green: #3fb950;
+    --green-dim: rgba(63,185,80,0.12);
+    --red: #f85149;
+    --red-dim: rgba(248,81,73,0.12);
+    --blue: #58a6ff;
+    --blue-dim: rgba(88,166,255,0.12);
+    --orange: #d29922;
+    --radius: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+
+  /* ============ LOGIN ============ */
+  #login-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(227,160,58,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 80% at 100% 100%, rgba(88,166,255,0.05) 0%, transparent 60%),
+                var(--bg);
+  }
+  .login-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 18px;
+    padding: 48px 52px;
+    width: 100%; max-width: 420px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    animation: fadeUp .5s ease both;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:none; } }
+  .login-logo {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 8px;
+  }
+  .login-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 30px; font-weight: 600; color: var(--text);
+    margin-bottom: 32px; line-height: 1.1;
+  }
+  .login-title span { color: var(--gold); }
+  .form-label { font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text2); margin-bottom: 8px; display: block; }
+  .form-input {
+    width: 100%; padding: 13px 16px;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 8px; color: var(--text); font-size: 15px; font-family: 'Inter', sans-serif;
+    outline: none; transition: border-color .2s, box-shadow .2s;
+    margin-bottom: 20px;
+  }
+  .form-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(227,160,58,0.15); }
+  .login-btn {
+    width: 100%; padding: 14px;
+    background: var(--gold); color: #0d1117;
+    border: none; border-radius: 8px; font-family: 'Oswald', sans-serif;
+    font-size: 15px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: background .2s, transform .1s;
+    margin-top: 8px;
+  }
+  .login-btn:hover { background: var(--gold2); transform: translateY(-1px); }
+  .login-error { color: var(--red); font-size: 13px; margin-top: 12px; display: none; text-align: center; }
+
+  /* ============ APP ============ */
+  #app-screen { display: none; min-height: 100vh; flex-direction: column; }
+
+  /* Header */
+  .header {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 0 32px; display: flex; align-items: center; justify-content: space-between;
+    height: 60px; position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 20px; }
+  .header-brand { font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+  .header-sep { width: 1px; height: 28px; background: var(--border2); }
+  .header-title { font-size: 14px; color: var(--text2); font-weight: 400; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .user-badge {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 24px; padding: 5px 16px 5px 5px;
+  }
+  .user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), #b87820);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 600; color: #000;
+  }
+  .user-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .logout-btn {
+    background: none; border: 1px solid var(--border2); border-radius: 8px;
+    color: var(--text2); font-size: 12px; padding: 6px 14px;
+    cursor: pointer; transition: all .2s; font-family: 'Inter', sans-serif;
+  }
+  .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* Tabs (director only) */
+  .tabs-bar {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 0 32px; display: flex; gap: 4px; overflow-x: auto;
+  }
+  .tab-btn {
+    padding: 14px 22px; font-size: 13px; font-weight: 500;
+    color: var(--text2); background: none; border: none; border-bottom: 2px solid transparent;
+    cursor: pointer; transition: all .2s; white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* Main content */
+  .main { padding: 28px 32px; flex: 1; }
+
+  /* Period selector */
+  .period-row { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .period-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); }
+  .period-btn {
+    padding: 6px 18px; background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 20px; font-size: 13px; color: var(--text2);
+    cursor: pointer; transition: all .2s; font-family: 'Inter', sans-serif;
+  }
+  .period-btn.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); font-weight: 600; }
+
+  /* Section title */
+  .section-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 14px; margin-top: 28px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  /* KPI Cards */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 4px; }
+  .kpi-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 22px;
+    transition: border-color .2s, transform .2s;
+    animation: fadeUp .4s ease both;
+  }
+  .kpi-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .kpi-card.gold-accent { border-color: rgba(227,160,58,0.3); }
+  .kpi-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+  .kpi-value { font-family: 'Oswald', sans-serif; font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; }
+  .kpi-value.gold { color: var(--gold); }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.red { color: var(--red); }
+  .kpi-sub { font-size: 12px; color: var(--text3); margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+  .kpi-badge { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .kpi-badge.green { background: var(--green-dim); color: var(--green); }
+  .kpi-badge.red { background: var(--red-dim); color: var(--red); }
+  .kpi-badge.gold { background: var(--gold-dim); color: var(--gold); }
+
+  /* Progress bar */
+  .progress-wrap { margin-top: 10px; }
+  .progress-bar-bg { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 2px; background: var(--gold); transition: width .8s ease; }
+  .progress-bar-fill.green { background: var(--green); }
+
+  /* Charts row */
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 4px; }
+  @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+    animation: fadeUp .4s ease both;
+  }
+  .chart-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 18px; }
+
+  /* Bar chart */
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+  .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar-wrap { width: 100%; display: flex; gap: 3px; align-items: flex-end; }
+  .bar-col { flex: 1; border-radius: 4px 4px 0 0; transition: opacity .2s; min-height: 2px; }
+  .bar-col:hover { opacity: .8; }
+  .bar-label { font-size: 11px; color: var(--text3); text-align: center; margin-top: 4px; }
+  .bar-legend { display: flex; gap: 14px; margin-top: 12px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); }
+
+  /* Donut chart */
+  .donut-wrap { display: flex; align-items: center; gap: 24px; }
+  .donut-svg { flex-shrink: 0; }
+  .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .donut-item { display: flex; justify-content: space-between; align-items: center; }
+  .donut-label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); }
+  .donut-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .donut-value { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 500; color: var(--text); }
+
+  /* Table */
+  .table-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    animation: fadeUp .4s ease both;
+  }
+  .table-header { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .table-title { font-size: 13px; font-weight: 600; color: var(--text2); }
+  .table-count { font-size: 12px; color: var(--text3); background: var(--bg3); border-radius: 20px; padding: 2px 10px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 11px 14px; text-align: left;
+    font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--text3); border-bottom: 1px solid var(--border);
+    background: var(--bg2); position: sticky; top: 0;
+  }
+  tbody tr { transition: background .15s; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td { padding: 12px 14px; font-size: 13px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  .num { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 400; }
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .status-badge.paid { background: var(--green-dim); color: var(--green); }
+  .status-badge.unpaid { background: var(--red-dim); color: var(--red); }
+  .status-badge.partial { background: var(--gold-dim); color: var(--gold); }
+  .status-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  /* Director manager cards */
+  .mgr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .mgr-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+    animation: fadeUp .4s ease both;
+    cursor: pointer; transition: border-color .2s, transform .2s;
+  }
+  .mgr-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .mgr-name { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .mgr-role { font-size: 12px; color: var(--text3); margin-bottom: 18px; }
+  .mgr-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mgr-stat { background: var(--bg3); border-radius: 8px; padding: 12px 14px; }
+  .mgr-stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 4px; }
+  .mgr-stat-val { font-family: 'Oswald', sans-serif; font-size: 17px; font-weight: 600; }
+  .mgr-stat-val.green { color: var(--green); }
+  .mgr-stat-val.red { color: var(--red); }
+  .mgr-stat-val.gold { color: var(--gold); }
+
+  /* Rank list */
+  .rank-list { display: flex; flex-direction: column; gap: 8px; }
+  .rank-item { display: flex; align-items: center; gap: 12px; }
+  .rank-num { font-family: 'Oswald', sans-serif; font-size: 13px; color: var(--text3); width: 20px; text-align: right; flex-shrink: 0; }
+  .rank-bar-wrap { flex: 1; }
+  .rank-company { font-size: 12px; color: var(--text2); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+  .rank-bar-bg { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .rank-bar-fill { height: 100%; border-radius: 3px; background: var(--gold); }
+  .rank-amount { font-family: 'Oswald', sans-serif; font-size: 12px; color: var(--text); flex-shrink: 0; min-width: 80px; text-align: right; }
+
+  /* Scrollable table wrapper */
+  .table-scroll { max-height: 420px; overflow-y: auto; }
+  .table-scroll::-webkit-scrollbar { width: 4px; }
+  .table-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 48px; color: var(--text3); font-size: 13px; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header { padding: 0 16px; }
+    .main { padding: 20px 16px; }
+    .tabs-bar { padding: 0 16px; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Строительная лаборатория</div>
+    <div class="login-title">Портал<br><span>менеджеров</span></div>
+    <label class="form-label">Логин</label>
+    <input class="form-input" type="text" id="inp-login" placeholder="Введите логин" autocomplete="username">
+    <label class="form-label">Пароль</label>
+    <input class="form-input" type="password" id="inp-pass" placeholder="Введите пароль" autocomplete="current-password">
+    <button class="login-btn" onclick="doLogin()">Войти</button>
+    <div class="login-error" id="login-error">Неверный логин или пароль</div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="app-screen" style="display:none;flex-direction:column;">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-brand">СтройЛаб</div>
+      <div class="header-sep"></div>
+      <div class="header-title" id="header-subtitle">Дашборд менеджера</div>
+    </div>
+    <div class="header-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-name" id="user-name-display">—</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Выйти</button>
+    </div>
+  </div>
+
+  <!-- Tabs (director only) -->
+  <div class="tabs-bar" id="tabs-bar" style="display:none;">
+    <button class="tab-btn active" data-tab="overview" onclick="switchTab(this)">Общий дашборд</button>
+    <button class="tab-btn" data-tab="aleksandrov" onclick="switchTab(this)">Александров С</button>
+    <button class="tab-btn" data-tab="martynov" onclick="switchTab(this)">Мартынов А</button>
+    <button class="tab-btn" data-tab="sinchagova" onclick="switchTab(this)">Синчагова С</button>
+  </div>
+
+  <div class="main" id="main-content"></div>
+</div>
+
+<script>
+// ============ DATA ============
+const REGISTRY = [{"month":"1","date":"11.01.2026","client_type":"Новый","company":"СТК Гермес","manager":"Синчагова С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":40140,"fact":40140,"debt":0,"invoice":"счет № 4 от 13.01.2026","status":"оплачен","payment_date":"22.01.2026"},{"month":"1","date":"11.01.2026","client_type":"Новый","company":"СТК БАЗИС","manager":"Александров С","test_type":"Работы по электролаборатории","lab":"Электролаборатория","plan":50000,"fact":50000,"debt":0,"invoice":"счет 2 от 13.01.2026","status":"оплачен","payment_date":"14.01.2026"},{"month":"1","date":"12.01.2026","client_type":"Новый","company":"Паритет","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":38900,"fact":38900,"debt":0,"invoice":"счет 14 от 20.01.26","status":"оплачен","payment_date":"06.02.2026"},{"month":"1","date":"12.01.2026","client_type":"Постоянный","company":"Реконструкция","manager":"Мартынов А","test_type":"Пост","lab":"Строительная лаборатория","plan":111290.33,"fact":111290.33,"debt":0,"invoice":"счет № 1 от 12.01.2026","status":"оплачен","payment_date":"19.01.2026"},{"month":"1","date":"13.01.2026","client_type":"Новый","company":"ЭлитСпецСтрой","manager":"Александров С","test_type":"Физ.мех.свойства грунта","lab":"Строительная лаборатория","plan":25000,"fact":25000,"debt":0,"invoice":"счет-договор № 7 от 14.01.2026","status":"оплачен","payment_date":"15.01.2026"},{"month":"1","date":"13.01.2026","client_type":"Новый","company":"Паритет","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":16600,"fact":16600,"debt":0,"invoice":"счет 15 от 20.01.26","status":"оплачен","payment_date":"09.02.2026"},{"month":"1","date":"13.01.2026","client_type":"Постоянный","company":"МИК","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":24840,"fact":24840,"debt":0,"invoice":"счет № 6 от 14.01.2026","status":"оплачен","payment_date":"14.01.2026"},{"month":"1","date":"14.01.2026","client_type":"Новый","company":"Паритет","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":15000,"fact":15000,"debt":0,"invoice":"счет 16 от 20.01.26","status":"оплачен","payment_date":"06.02.2026"},{"month":"1","date":"14.01.2026","client_type":"Постоянный","company":"Евродом Групп","manager":"Александров С","test_type":"Пост","lab":"Строительная лаборатория","plan":250000,"fact":250000,"debt":0,"invoice":"счет № 5 от 14.01.2026","status":"оплачен","payment_date":"20.01.2026"},{"month":"1","date":"15.01.2026","client_type":"Постоянный","company":"Евродом Групп","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"","status":"оплачен","payment_date":""},{"month":"1","date":"16.01.2026","client_type":"Постоянный","company":"АРМА-ХОЛЛ","manager":"Мартынов А","test_type":"Сварные соединения","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"уч сч 663","status":"оплачен","payment_date":""},{"month":"1","date":"16.01.2026","client_type":"Постоянный","company":"Резерв","manager":"Мартынов А","test_type":"Испытание песка","lab":"Строительная лаборатория","plan":96986,"fact":96986,"debt":0,"invoice":"счет 13 от 19.01.2026 отправлен","status":"оплачен","payment_date":"03.03.2026"},{"month":"1","date":"16.01.2026","client_type":"Постоянный","company":"Резерв","manager":"Мартынов А","test_type":"Испытание песка","lab":"Строительная лаборатория","plan":125672,"fact":0,"debt":125672,"invoice":"счет 21 от 20.01.2026 отправлен","status":"не оплачен","payment_date":""},{"month":"1","date":"16.01.2026","client_type":"Постоянный","company":"СтройРесурс (Мартынов)","manager":"Мартынов А","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":18000,"fact":18000,"debt":0,"invoice":"счет 11 от 16.01.2026г отправлен","status":"оплачен","payment_date":"19.01.2026"},{"month":"1","date":"16.01.2026","client_type":"Постоянный","company":"МИК","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"","status":"оплачен","payment_date":""},{"month":"1","date":"16.01.2026","client_type":"Новый","company":"СтройПромТорг ООО","manager":"Синчагова С","test_type":"Испытания анкеров","lab":"Строительная лаборатория","plan":18000,"fact":18000,"debt":0,"invoice":"счет № 9 от 15.01.26","status":"оплачен","payment_date":"19.01.2026"},{"month":"1","date":"19.01.2026","client_type":"Постоянный","company":"МИК","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":24840,"fact":24840,"debt":0,"invoice":"счет № 22 от 21.01.2026","status":"оплачен","payment_date":"26.01.2026"},{"month":"1","date":"19.01.2026","client_type":"Постоянный","company":"Паритет","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":15000,"fact":15000,"debt":0,"invoice":"счет 17 от 20.01.26","status":"оплачен","payment_date":"11.02.2026"},{"month":"1","date":"20.01.2026","client_type":"Постоянный","company":"Резерв","manager":"Мартынов А","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":49973,"fact":49973,"debt":0,"invoice":"счет 20 от 20.01.2026, акт 13 от 20.01.26","status":"оплачен","payment_date":"17.03.2026"},{"month":"1","date":"20.01.2026","client_type":"Новый","company":"СТК Гермес","manager":"Синчагова С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":72500,"fact":72500,"debt":0,"invoice":"счет 25 от 23.01.2026","status":"оплачен","payment_date":"28.01.2026"},{"month":"1","date":"20.01.2026","client_type":"Возобновили работу","company":"СБД","manager":"Александров С","test_type":"Обследование здания","lab":"Строительная лаборатория","plan":1278195.35,"fact":1278195.35,"debt":0,"invoice":"счет 10 от 16.01.2026","status":"оплачен","payment_date":"19.01.2026"},{"month":"1","date":"21.01.2026","client_type":"Постоянный","company":"Паритет","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":36250,"fact":36250,"debt":0,"invoice":"счет 18 от 20.01.26","status":"оплачен","payment_date":"02.03.2026"},{"month":"1","date":"21.01.2026","client_type":"Постоянный","company":"Реконструкция","manager":"Мартынов А","test_type":"Пост","lab":"Строительная лаборатория","plan":134838.7,"fact":134838.7,"debt":0,"invoice":"счет 12 от 19.01.2026 отправлен","status":"оплачен","payment_date":"20.01.2026"},{"month":"1","date":"21.01.2026","client_type":"Постоянный","company":"СМК ЖелДорСтрой","manager":"Мартынов А","test_type":"Испытание щебня","lab":"Строительная лаборатория","plan":30500,"fact":30500,"debt":0,"invoice":"счет 23 от 22.01.2026 отправлен","status":"оплачен","payment_date":"23.01.2026"},{"month":"1","date":"22.01.2026","client_type":"Постоянный","company":"ИП Мхикян Светлана Вагаршаковна","manager":"Мартынов А","test_type":"Испытание асфальтобетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"","status":"оплачен","payment_date":""},{"month":"1","date":"22.01.2026","client_type":"Постоянный","company":"Паритет","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":15000,"fact":15000,"debt":0,"invoice":"счет 36 от 02.02.26","status":"оплачен","payment_date":"25.02.2026"},{"month":"1","date":"22.01.2026","client_type":"Возобновили работу","company":"ТРАСТ Строй Инвест","manager":"Александров С","test_type":"Испытание грунта","lab":"Строительная лаборатория","plan":20000,"fact":20000,"debt":0,"invoice":"счет-договор 24 от 26.01.2026","status":"оплачен","payment_date":"28.01.2026"},{"month":"1","date":"22.01.2026","client_type":"Возобновили работу","company":"МЛ-Проект","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":1000,"fact":1000,"debt":0,"invoice":"на карту","status":"оплачен","payment_date":"22.01.2026"},{"month":"1","date":"23.01.2026","client_type":"Постоянный","company":"Евродом Групп","manager":"Александров С","test_type":"Испытание арматуры","lab":"Строительная лаборатория","plan":33300,"fact":33300,"debt":0,"invoice":"счет 35 от 02.02.2026","status":"оплачен","payment_date":"11.02.2026"},{"month":"1","date":"26.01.2026","client_type":"Постоянный","company":"Резерв","manager":"Мартынов А","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"","status":"оплачен","payment_date":""},{"month":"1","date":"26.01.2026","client_type":"Постоянный","company":"МИК","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"","status":"оплачен","payment_date":""},{"month":"1","date":"26.01.2026","client_type":"Постоянный","company":"МЛ-Проект","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":1000,"fact":1000,"debt":0,"invoice":"на карту","status":"оплачен","payment_date":"05.02.2026"},{"month":"1","date":"26.01.2026","client_type":"Постоянный","company":"СОЮЗ 1","manager":"Александров С","test_type":"Тепловизия","lab":"Строительная лаборатория","plan":95000,"fact":95000,"debt":0,"invoice":"счет 26 от 27.01.2026","status":"оплачен","payment_date":"30.01.2026"},{"month":"1","date":"27.01.2026","client_type":"Постоянный","company":"Резерв","manager":"Мартынов А","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"уч в сч 20","status":"оплачен","payment_date":""},{"month":"1","date":"27.01.2026","client_type":"Постоянный","company":"МИК","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":37260,"fact":37260,"debt":0,"invoice":"счет 29 от 28.01.2026","status":"оплачен","payment_date":"11.02.2026"},{"month":"1","date":"28.01.2026","client_type":"Постоянный","company":"Резерв","manager":"Мартынов А","test_type":"Испытание песка","lab":"Строительная лаборатория","plan":96303,"fact":50027,"debt":46276,"invoice":"Счет 45 от 06.02.2026","status":"частичная оплата","payment_date":"17.03.2026"},{"month":"1","date":"28.01.2026","client_type":"Постоянный","company":"Резерв","manager":"Мартынов А","test_type":"Испытание песка","lab":"Строительная лаборатория","plan":99718,"fact":0,"debt":99718,"invoice":"Счет 46 от 06.02.2026","status":"не оплачен","payment_date":""},{"month":"1","date":"28.01.2026","client_type":"Постоянный","company":"Резерв","manager":"Мартынов А","test_type":"Испытание песка","lab":"Строительная лаборатория","plan":86058,"fact":0,"debt":86058,"invoice":"Счет 47 от 06.02.2026","status":"не оплачен","payment_date":""},{"month":"1","date":"29.01.2026","client_type":"Новый","company":"УК М7М12 ООО","manager":"Синчагова С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":20000,"fact":20000,"debt":0,"invoice":"счет-договор № 27 от 27.01.26","status":"оплачен","payment_date":"29.01.2026"},{"month":"1","date":"29.01.2026","client_type":"Постоянный","company":"СБД","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"","status":"оплачен","payment_date":""},{"month":"1","date":"30.01.2026","client_type":"Постоянный","company":"МИК","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":20000,"fact":20000,"debt":0,"invoice":"счет 40 от 05.02.2026","status":"оплачен","payment_date":"06.02.2026"},{"month":"1","date":"30.01.2026","client_type":"Постоянный","company":"СБД","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":2982455.8,"fact":2982455.8,"debt":0,"invoice":"счет 52 от 13.02.2026","status":"оплачен","payment_date":"02.03.2026"},{"month":"1","date":"30.01.2026","client_type":"Постоянный","company":"Евродом Групп","manager":"Александров С","test_type":"Пост","lab":"Строительная лаборатория","plan":250000,"fact":250000,"debt":0,"invoice":"счет 34 от 30.01.2026","status":"оплачен","payment_date":"05.02.2026"},{"month":"1","date":"31.01.2026","client_type":"Новый","company":"ЭКОСТРОЙГРУПП","manager":"Синчагова С","test_type":"Испытание грунта","lab":"Строительная лаборатория","plan":25000,"fact":25000,"debt":0,"invoice":"счет-договор 32 от 30.01.26","status":"оплачен","payment_date":"30.01.2026"},{"month":"2","date":"01.02.2026","client_type":"Постоянный","company":"Реконструкция","manager":"Мартынов А","test_type":"Пост","lab":"Строительная лаборатория","plan":150000,"fact":150000,"debt":0,"invoice":"счет 37 от 02.02.2026 отправлен","status":"оплачен","payment_date":"11.02.2026"},{"month":"2","date":"01.02.2026","client_type":"Постоянный","company":"Реконструкция","manager":"Мартынов А","test_type":"Пост","lab":"Строительная лаборатория","plan":150000,"fact":150000,"debt":0,"invoice":"счет 39 от 02.02.2026 отправлен","status":"оплачен","payment_date":"11.02.2026"},{"month":"2","date":"01.02.2026","client_type":"Постоянный","company":"Реконструкция","manager":"Мартынов А","test_type":"Пост","lab":"Строительная лаборатория","plan":190000,"fact":190000,"debt":0,"invoice":"счет 38 от 02.02.2026 отправлен","status":"оплачен","payment_date":"11.02.2026"},{"month":"2","date":"02.02.2026","client_type":"Постоянный","company":"Паритет","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":29900,"fact":29900,"debt":0,"invoice":"счет 42 от 06.02.2026","status":"оплачен","payment_date":"02.03.2026"},{"month":"2","date":"02.02.2026","client_type":"Постоянный","company":"Паритет","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":22200,"fact":22200,"debt":0,"invoice":"счет 43 от 06.02.2026","status":"оплачен","payment_date":"02.03.2026"},{"month":"2","date":"02.02.2026","client_type":"Новый","company":"Парк Лето","manager":"Александров С","test_type":"Тепловизия","lab":"Строительная лаборатория","plan":28500,"fact":28500,"debt":0,"invoice":"счет 31 от 30.01.26","status":"оплачен","payment_date":"30.01.2026"},{"month":"2","date":"03.02.2026","client_type":"Новый","company":"Строительная Компания ЭСТ","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":4500,"fact":4500,"debt":0,"invoice":"счет-договор 30 от 29.01.26","status":"оплачен","payment_date":"05.02.2026"},{"month":"2","date":"03.02.2026","client_type":"Новый","company":"Гефест-Строй","manager":"Александров С","test_type":"Сварные соединения","lab":"Строительная лаборатория","plan":25000,"fact":25000,"debt":0,"invoice":"счет-договор 33 от 30.01.2026","status":"оплачен","payment_date":"02.02.2026"},{"month":"2","date":"04.02.2026","client_type":"Постоянный","company":"ГАЗПАЙП","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":15000,"fact":15750,"debt":0,"invoice":"счет 41 от 05.02.2026","status":"частичная оплата","payment_date":"06.02.2026"},{"month":"2","date":"05.02.2026","client_type":"Постоянный","company":"ГСМ","manager":"Мартынов А","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"","status":"оплачен","payment_date":""},{"month":"2","date":"06.02.2026","client_type":"Постоянный","company":"Евродом Групп","manager":"Александров С","test_type":"","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"без счета","status":"оплачен","payment_date":""},{"month":"2","date":"09.02.2026","client_type":"Постоянный","company":"МИК","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":21420,"fact":21420,"debt":0,"invoice":"счет 48 от 10.02.2026","status":"оплачен","payment_date":"17.02.2026"},{"month":"2","date":"09.02.2026","client_type":"Новый","company":"АРМА-ХОЛЛ","manager":"Мартынов А","test_type":"Сварные соединения","lab":"Строительная лаборатория","plan":273377,"fact":273377,"debt":0,"invoice":"счет 106 от 06.03.2026","status":"оплачен","payment_date":"14.04.2026"},{"month":"2","date":"09.02.2026","client_type":"Постоянный","company":"Паритет","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":15000,"fact":15000,"debt":0,"invoice":"счет № 95 от 04.03.2026","status":"оплачен","payment_date":"25.03.2026"},{"month":"2","date":"10.02.2026","client_type":"Новый","company":"Вперёд ДВЛ","manager":"Мартынов А","test_type":"Сварные соединения","lab":"Строительная лаборатория","plan":303400,"fact":303400,"debt":0,"invoice":"счет 87 от 02.03.2026г отправлен","status":"оплачен","payment_date":"12.03.2026"},{"month":"2","date":"10.02.2026","client_type":"Постоянный","company":"Строительная Компания ЭСТ","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"в счете-договоре 30","status":"оплачен","payment_date":""},{"month":"2","date":"11.02.2026","client_type":"Постоянный","company":"СБД","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"","status":"оплачен","payment_date":""},{"month":"2","date":"11.02.2026","client_type":"Постоянный","company":"Гефест-Строй","manager":"Александров С","test_type":"Сварные соединения","lab":"Строительная лаборатория","plan":63400,"fact":63400,"debt":0,"invoice":"счет 44 от 06.02.2026","status":"оплачен","payment_date":"10.02.2026"},{"month":"2","date":"11.02.2026","client_type":"Постоянный","company":"Резерв","manager":"Мартынов А","test_type":"Испытание грунта, песка, щебня","lab":"Строительная лаборатория","plan":50000,"fact":0,"debt":50000,"invoice":"счет 121 от 10.03.2026 отправлен","status":"не оплачен","payment_date":""},{"month":"2","date":"12.02.2026","client_type":"Новый","company":"Вперёд ДВЛ","manager":"Мартынов А","test_type":"Сварные соединения","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"уч в сч 87","status":"оплачен","payment_date":""},{"month":"2","date":"12.02.2026","client_type":"Постоянный","company":"Радуга","manager":"Мартынов А","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":56880,"fact":56880,"debt":0,"invoice":"счет-договор № 2 от 16.02.2026г","status":"оплачен","payment_date":"18.02.2026"},{"month":"2","date":"12.02.2026","client_type":"Постоянный","company":"СБД","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"","status":"оплачен","payment_date":""},{"month":"2","date":"13.02.2026","client_type":"Постоянный","company":"ИП Мхикян Светлана Вагаршаковна","manager":"Мартынов А","test_type":"Испытание асфальтобетона","lab":"Строительная лаборатория","plan":109800,"fact":109800,"debt":0,"invoice":"счет-договор № 53 от 16.02.2026г отправлен","status":"оплачен","payment_date":"16.02.2026"},{"month":"2","date":"13.02.2026","client_type":"Постоянный","company":"ГСМ","manager":"Мартынов А","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":36000,"fact":36000,"debt":0,"invoice":"счет-договор № 54 от 16.02.2026г","status":"оплачен","payment_date":"10.03.2026"},{"month":"2","date":"13.02.2026","client_type":"Постоянный","company":"СтройРесурс (Мартынов)","manager":"Мартынов А","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":18000,"fact":18000,"debt":0,"invoice":"счет 51 от 13.02.2025г отправлено","status":"оплачен","payment_date":"18.02.2026"},{"month":"2","date":"14.02.2026","client_type":"Новый","company":"СТК Гермес","manager":"Синчагова С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":36000,"fact":36000,"debt":0,"invoice":"счет 50 от 12.02.2026","status":"оплачен","payment_date":"18.02.2026"},{"month":"2","date":"16.02.2026","client_type":"Постоянный","company":"МИК","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":170280,"fact":170280,"debt":0,"invoice":"счет 71 от 18.02.2026","status":"оплачен","payment_date":"27.02.2026"},{"month":"2","date":"16.02.2026","client_type":"Постоянный","company":"СБД","manager":"Александров С","test_type":"Испытание бетона","lab":"Строительная лаборатория","plan":0,"fact":0,"debt":0,"invoice":"","status":"оплачен","payment_date":""}];
+
+// DZ from summary sheet (April 2026)
+const DZ = {
+  "Александров С": 4122480.5,
+  "Мартынов А": 3772583,
+  "Синчагова С": 99690
+};
+const DZ_TOTAL = 7999563.5;
+
+// ============ USERS ============
+const USERS = {
+  "aleksandrov": { pass: "lab2026", name: "Александров С", role: "manager", manager: "Александров С", initials: "АС" },
+  "martynov":    { pass: "lab2026", name: "Мартынов А",    role: "manager", manager: "Мартынов А",    initials: "МА" },
+  "sinchagova":  { pass: "lab2026", name: "Синчагова С",   role: "manager", manager: "Синчагова С",   initials: "СС" },
+  "director":    { pass: "director2026", name: "Руководитель", role: "director", manager: null, initials: "РК" }
+};
+
+let currentUser = null;
+let currentPeriod = "all";
+let currentTab = "overview";
+
+// ============ LOGIN ============
+document.getElementById('inp-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('inp-login').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('inp-pass').focus(); });
+
+function doLogin() {
+  const login = document.getElementById('inp-login').value.trim().toLowerCase();
+  const pass  = document.getElementById('inp-pass').value;
+  const user  = USERS[login];
+  if (user && user.pass === pass) {
+    currentUser = { ...user, login };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'flex';
+    document.getElementById('user-name-display').textContent = currentUser.name;
+    document.getElementById('user-avatar').textContent = currentUser.initials;
+    if (currentUser.role === 'director') {
+      document.getElementById('tabs-bar').style.display = 'flex';
+      document.getElementById('header-subtitle').textContent = 'Дашборд руководителя';
+    } else {
+      document.getElementById('header-subtitle').textContent = 'Личный дашборд';
+    }
+    renderContent();
+  } else {
+    const err = document.getElementById('login-error');
+    err.style.display = 'block';
+    err.style.animation = 'none';
+    setTimeout(() => err.style.animation = '', 10);
+  }
+}
+
+function doLogout() {
+  currentUser = null; currentPeriod = "all"; currentTab = "overview";
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('inp-login').value = '';
+  document.getElementById('inp-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+// ============ TAB / PERIOD ============
+function switchTab(btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTab = btn.dataset.tab;
+  renderContent();
+}
+
+function setPeriod(p) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+  renderContent();
+}
+
+// ============ DATA HELPERS ============
+function getRows(manager) {
+  let rows = REGISTRY;
+  if (manager) rows = rows.filter(r => r.manager === manager);
+  if (currentPeriod === '1') rows = rows.filter(r => r.month === '1');
+  if (currentPeriod === '2') rows = rows.filter(r => r.month === '2');
+  return rows;
+}
+
+function fmt(n) {
+  return Math.round(n).toLocaleString('ru-RU') + ' ₽';
+}
+function fmtK(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1) + ' млн';
+  if (n >= 1000) return (n/1000).toFixed(0) + ' тыс';
+  return Math.round(n).toString();
+}
+function pct(a, b) { return b ? Math.round(a/b*100) : 0; }
+function bar(val, pct_val, color='') {
+  const c = color || (pct_val >= 100 ? 'green' : '');
+  return `<div class="progress-bar-bg"><div class="progress-bar-fill ${c}" style="width:${Math.min(pct_val,100)}%"></div></div>`;
+}
+
+function topClients(rows, n=5) {
+  const map = {};
+  rows.forEach(r => { if(r.company) map[r.company] = (map[r.company]||0) + r.fact; });
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,n).filter(x=>x[1]>0);
+}
+
+function byTestType(rows) {
+  const map = {};
+  rows.forEach(r => { if(r.test_type) map[r.test_type] = (map[r.test_type]||0) + r.fact; });
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,5).filter(x=>x[1]>0);
+}
+
+// ============ RENDER ============
+function renderContent() {
+  const c = document.getElementById('main-content');
+  if (currentUser.role === 'manager') {
+    c.innerHTML = renderManagerDash(currentUser.manager);
+  } else {
+    if (currentTab === 'overview') c.innerHTML = renderDirectorOverview();
+    else {
+      const map = { aleksandrov: 'Александров С', martynov: 'Мартынов А', sinchagova: 'Синчагова С' };
+      c.innerHTML = renderManagerDash(map[currentTab]);
+    }
+  }
+  // Animate bars after render
+  setTimeout(() => {
+    document.querySelectorAll('.progress-bar-fill, .rank-bar-fill').forEach(el => {
+      const w = el.style.width; el.style.width = '0'; setTimeout(()=>el.style.width=w, 50);
+    });
+  }, 0);
+}
+
+function periodSelector() {
+  return `<div class="period-row">
+    <span class="period-label">Период:</span>
+    <button class="period-btn ${currentPeriod==='all'?'active':''}" data-p="all" onclick="setPeriod('all')">Всего 2026</button>
+    <button class="period-btn ${currentPeriod==='1'?'active':''}" data-p="1" onclick="setPeriod('1')">Январь</button>
+    <button class="period-btn ${currentPeriod==='2'?'active':''}" data-p="2" onclick="setPeriod('2')">Февраль</button>
+  </div>`;
+}
+
+// ============ MANAGER DASHBOARD ============
+function renderManagerDash(manager) {
+  const rows = getRows(manager);
+  const plan = rows.reduce((s,r)=>s+r.plan,0);
+  const fact = rows.reduce((s,r)=>s+r.fact,0);
+  const debt = rows.reduce((s,r)=>s+r.debt,0);
+  const pctExec = pct(fact, plan);
+  const paid = rows.filter(r=>r.status==='оплачен').length;
+  const unpaid = rows.filter(r=>r.status==='не оплачен').length;
+  const partial = rows.filter(r=>r.status==='частичная оплата').length;
+  const dz = DZ[manager] || 0;
+
+  // By month
+  const m1 = rows.filter(r=>r.month==='1');
+  const m2 = rows.filter(r=>r.month==='2');
+
+  // Top clients
+  const top = topClients(rows, 6);
+  const topMax = top.length ? top[0][1] : 1;
+
+  // By test type
+  const byType = byTestType(rows);
+
+  // Monthly bar chart data
+  const months = [
+    { label:'Янв', plan: m1.reduce((s,r)=>s+r.plan,0), fact: m1.reduce((s,r)=>s+r.fact,0) },
+    { label:'Фев', plan: m2.reduce((s,r)=>s+r.plan,0), fact: m2.reduce((s,r)=>s+r.fact,0) },
+  ];
+  const maxBar = Math.max(...months.map(m=>Math.max(m.plan, m.fact)), 1);
+
+  return `
+  ${periodSelector()}
+  
+  <div class="section-title">Ключевые показатели</div>
+  <div class="kpi-grid">
+    <div class="kpi-card gold-accent">
+      <div class="kpi-label">Факт (поступления)</div>
+      <div class="kpi-value gold">${fmtK(fact)}</div>
+      <div class="kpi-sub">${bar(fact, pctExec)} <span class="kpi-badge ${pctExec>=100?'green':'gold'}">${pctExec}%</span> от плана</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">План</div>
+      <div class="kpi-value">${fmtK(plan)}</div>
+      <div class="kpi-sub">Количество заявок: ${rows.filter(r=>r.plan>0).length}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Дебиторская задолженность</div>
+      <div class="kpi-value ${dz>0?'red':'green'}">${fmtK(dz)}</div>
+      <div class="kpi-sub">Из реестра: <span style="color:var(--red)">${fmtK(debt)}</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Оплата (сделки)</div>
+      <div class="kpi-value green">${paid}</div>
+      <div class="kpi-sub">
+        <span class="kpi-badge red">${unpaid} не опл.</span>
+        ${partial?`<span class="kpi-badge gold">${partial} частичн.</span>`:''}
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Динамика по месяцам</div>
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">📊 План vs Факт по месяцам</div>
+      <div class="bar-chart">
+        ${months.map(m=>`
+          <div class="bar-group">
+            <div class="bar-wrap" style="height:100px;align-items:flex-end;">
+              <div class="bar-col" style="background:var(--border2);height:${m.plan/maxBar*100}px;" title="План: ${fmt(m.plan)}"></div>
+              <div class="bar-col" style="background:var(--gold);height:${m.fact/maxBar*100}px;" title="Факт: ${fmt(m.fact)}"></div>
+            </div>
+            <div class="bar-label">${m.label}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="bar-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--border2)"></div>План</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Факт</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🏢 Топ клиентов</div>
+      <div class="rank-list">
+        ${top.map((c,i)=>`
+          <div class="rank-item">
+            <div class="rank-num">${i+1}</div>
+            <div class="rank-bar-wrap">
+              <div class="rank-company" title="${c[0]}">${c[0]}</div>
+              <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${c[1]/topMax*100}%"></div></div>
+            </div>
+            <div class="rank-amount">${fmtK(c[1])}</div>
+          </div>
+        `).join('') || '<div class="empty-state">Нет данных</div>'}
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Реестр сделок</div>
+  <div class="table-card">
+    <div class="table-header">
+      <div class="table-title">Все заявки 2026</div>
+      <div class="table-count">${rows.filter(r=>r.plan>0||r.company).length} записей</div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Дата</th>
+            <th>Компания</th>
+            <th>Тип работ</th>
+            <th>План</th>
+            <th>Факт</th>
+            <th>Долг</th>
+            <th>Статус</th>
+            <th>Дата оплаты</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.filter(r=>r.company).map(r=>`
+            <tr>
+              <td style="color:var(--text3);white-space:nowrap">${r.date}</td>
+              <td style="font-weight:500">${r.company}</td>
+              <td style="color:var(--text2);font-size:12px">${r.test_type||'—'}</td>
+              <td class="num">${r.plan>0?fmt(r.plan):'—'}</td>
+              <td class="num">${r.fact>0?fmt(r.fact):'—'}</td>
+              <td class="num ${r.debt>0?'style="color:var(--red)"':''}">${r.debt>0?fmt(r.debt):'—'}</td>
+              <td>${statusBadge(r.status)}</td>
+              <td style="color:var(--text3);font-size:12px">${r.payment_date||'—'}</td>
+            </tr>
+          `).join('') || '<tr><td colspan="8" class="empty-state">Нет данных за выбранный период</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function statusBadge(s) {
+  if (s === 'оплачен') return `<span class="status-badge paid"><span class="status-dot"></span>Оплачен</span>`;
+  if (s === 'не оплачен') return `<span class="status-badge unpaid"><span class="status-dot"></span>Не оплачен</span>`;
+  if (s === 'частичная оплата') return `<span class="status-badge partial"><span class="status-dot"></span>Частично</span>`;
+  return `<span style="color:var(--text3);font-size:12px">${s||'—'}</span>`;
+}
+
+// ============ DIRECTOR OVERVIEW ============
+function renderDirectorOverview() {
+  const mgrs = ['Александров С', 'Мартынов А', 'Синчагова С'];
+  const allRows = getRows(null);
+  const totalFact = allRows.reduce((s,r)=>s+r.fact,0);
+  const totalPlan = allRows.reduce((s,r)=>s+r.plan,0);
+  const totalDebt = allRows.reduce((s,r)=>s+r.debt,0);
+  const totalDZ = DZ_TOTAL;
+  const pctTotal = pct(totalFact, totalPlan);
+
+  const mgrData = mgrs.map(m => {
+    const rows = getRows(m);
+    const plan = rows.reduce((s,r)=>s+r.plan,0);
+    const fact = rows.reduce((s,r)=>s+r.fact,0);
+    const debt = rows.reduce((s,r)=>s+r.debt,0);
+    const unpaid = rows.filter(r=>r.status==='не оплачен').length;
+    return { m, plan, fact, debt, unpaid, dz: DZ[m]||0, rows };
+  });
+
+  const topAll = topClients(allRows, 8);
+  const topAllMax = topAll.length ? topAll[0][1] : 1;
+
+  // Monthly totals
+  const months = ['1','2'].map(mo => {
+    const r = allRows.filter(x=>x.month===mo);
+    return { label: mo==='1'?'Январь':'Февраль', plan: r.reduce((s,x)=>s+x.plan,0), fact: r.reduce((s,x)=>s+x.fact,0) };
+  });
+  const maxBar = Math.max(...months.map(m=>Math.max(m.plan, m.fact)),1);
+
+  // Donut: fact share by manager
+  const colors = ['#e3a03a','#58a6ff','#3fb950'];
+  const donutTotal = mgrData.reduce((s,d)=>s+d.fact,0) || 1;
+  let donutPaths = '';
+  let startAngle = -90;
+  mgrData.forEach((d, i) => {
+    const angle = d.fact / donutTotal * 360;
+    donutPaths += describeArc(50, 50, 38, startAngle, startAngle + angle, colors[i]);
+    startAngle += angle;
+  });
+
+  return `
+  ${periodSelector()}
+
+  <div class="section-title">Итого по компании</div>
+  <div class="kpi-grid">
+    <div class="kpi-card gold-accent">
+      <div class="kpi-label">Всего поступлений</div>
+      <div class="kpi-value gold">${fmtK(totalFact)}</div>
+      <div class="kpi-sub">${bar(totalFact,pctTotal)} <span class="kpi-badge ${pctTotal>=100?'green':'gold'}">${pctTotal}% плана</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Общий план</div>
+      <div class="kpi-value">${fmtK(totalPlan)}</div>
+      <div class="kpi-sub">Всего заявок: ${allRows.filter(r=>r.plan>0).length}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Дебиторская (реестр)</div>
+      <div class="kpi-value red">${fmtK(totalDZ)}</div>
+      <div class="kpi-sub">Из реестра: <span style="color:var(--red)">${fmtK(totalDebt)}</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Задолженность (апрель)</div>
+      <div class="kpi-value red">${fmtK(totalDZ)}</div>
+      <div class="kpi-sub">По трём менеджерам</div>
+    </div>
+  </div>
+
+  <div class="section-title">Менеджеры</div>
+  <div class="mgr-grid">
+    ${mgrData.map((d,i)=>`
+    <div class="mgr-card" onclick="switchToMgr('${d.m}')">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,${colors[i]},${colors[i]}80);display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:14px;color:#000;font-weight:700;">
+          ${d.m.split(' ').map(w=>w[0]).join('')}
+        </div>
+        <div>
+          <div class="mgr-name">${d.m}</div>
+          <div class="mgr-role">Менеджер по продажам</div>
+        </div>
+      </div>
+      <div class="mgr-stats">
+        <div class="mgr-stat">
+          <div class="mgr-stat-label">Факт</div>
+          <div class="mgr-stat-val gold">${fmtK(d.fact)}</div>
+        </div>
+        <div class="mgr-stat">
+          <div class="mgr-stat-label">% плана</div>
+          <div class="mgr-stat-val ${pct(d.fact,d.plan)>=100?'green':'gold'}">${pct(d.fact,d.plan)}%</div>
+        </div>
+        <div class="mgr-stat">
+          <div class="mgr-stat-label">ДЗ (апрель)</div>
+          <div class="mgr-stat-val red">${fmtK(d.dz)}</div>
+        </div>
+        <div class="mgr-stat">
+          <div class="mgr-stat-label">Не оплачено</div>
+          <div class="mgr-stat-val ${d.unpaid>0?'red':'green'}">${d.unpaid}</div>
+        </div>
+      </div>
+      <div class="progress-wrap" style="margin-top:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;">
+          <span>Выполнение плана</span><span>${pct(d.fact,d.plan)}%</span>
+        </div>
+        ${bar(d.fact, pct(d.fact,d.plan))}
+      </div>
+    </div>
+    `).join('')}
+  </div>
+
+  <div class="section-title">Аналитика</div>
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">📊 План vs Факт по месяцам (компания)</div>
+      <div class="bar-chart">
+        ${months.map(m=>`
+          <div class="bar-group">
+            <div class="bar-wrap" style="height:110px;align-items:flex-end;">
+              <div class="bar-col" style="background:var(--border2);height:${m.plan/maxBar*110}px;" title="План: ${fmt(m.plan)}"></div>
+              <div class="bar-col" style="background:var(--gold);height:${m.fact/maxBar*110}px;" title="Факт: ${fmt(m.fact)}"></div>
+            </div>
+            <div class="bar-label">${m.label}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="bar-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--border2)"></div>План</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Факт</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">🥧 Доля менеджеров (факт)</div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" width="110" height="110" viewBox="0 0 100 100">
+          ${donutPaths}
+          <circle cx="50" cy="50" r="26" fill="var(--bg2)"/>
+          <text x="50" y="47" text-anchor="middle" font-size="9" fill="var(--text3)" font-family="Inter">Итого</text>
+          <text x="50" y="58" text-anchor="middle" font-size="9" fill="var(--gold)" font-family="Oswald" font-weight="600">${fmtK(donutTotal)}</text>
+        </svg>
+        <div class="donut-legend">
+          ${mgrData.map((d,i)=>`
+            <div class="donut-item">
+              <div class="donut-label">
+                <div class="donut-dot" style="background:${colors[i]}"></div>
+                ${d.m.split(' ')[0]}
+              </div>
+              <div class="donut-value">${pct(d.fact,donutTotal)}%</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Топ клиентов компании</div>
+  <div class="chart-card">
+    <div class="chart-title">Рейтинг по поступлениям (факт)</div>
+    <div class="rank-list">
+      ${topAll.map((c,i)=>`
+        <div class="rank-item">
+          <div class="rank-num">${i+1}</div>
+          <div class="rank-bar-wrap">
+            <div class="rank-company" title="${c[0]}">${c[0]}</div>
+            <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${c[1]/topAllMax*100}%"></div></div>
+          </div>
+          <div class="rank-amount">${fmtK(c[1])}</div>
+        </div>
+      `).join('') || '<div class="empty-state">Нет данных</div>'}
+    </div>
+  </div>
+
+  <div class="section-title">Дебиторская задолженность (Апрель 2026)</div>
+  <div class="table-card">
+    <div class="table-header">
+      <div class="table-title">По менеджерам</div>
+      <div class="table-count">3 менеджера</div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Менеджер</th><th>ДЗ (₽)</th><th>Доля</th><th>Статус</th></tr>
+      </thead>
+      <tbody>
+        ${mgrData.map(d=>`
+          <tr>
+            <td style="font-weight:600">${d.m}</td>
+            <td class="num" style="color:var(--red)">${fmt(d.dz)}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="progress-bar-bg" style="width:120px"><div class="progress-bar-fill" style="width:${pct(d.dz,DZ_TOTAL)}%;background:var(--red)"></div></div>
+                <span style="font-size:12px;color:var(--text3)">${pct(d.dz,DZ_TOTAL)}%</span>
+              </div>
+            </td>
+            <td>${d.unpaid > 0 ? `<span class="status-badge unpaid">${d.unpaid} не оплач.</span>` : `<span class="status-badge paid">Всё оплачено</span>`}</td>
+          </tr>
+        `).join('')}
+        <tr style="background:var(--bg3)">
+          <td style="font-weight:700;color:var(--gold)">ИТОГО</td>
+          <td class="num" style="color:var(--red);font-weight:700">${fmt(DZ_TOTAL)}</td>
+          <td style="color:var(--text3);font-size:12px">100%</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function switchToMgr(name) {
+  const map = { 'Александров С':'aleksandrov', 'Мартынов А':'martynov', 'Синчагова С':'sinchagova' };
+  const tab = document.querySelector(`.tab-btn[data-tab="${map[name]}"]`);
+  if (tab) switchTab(tab);
+}
+
+// ============ SVG ARC ============
+function describeArc(cx, cy, r, startAngle, endAngle, color) {
+  if (Math.abs(endAngle - startAngle) < 0.01) return '';
+  const start = polarToCart(cx, cy, r, startAngle);
+  const end   = polarToCart(cx, cy, r, endAngle);
+  const large = (endAngle - startAngle) > 180 ? 1 : 0;
+  return `<path d="M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${large} 1 ${end.x} ${end.y} Z" fill="${color}" opacity="0.9"/>`;
+}
+function polarToCart(cx, cy, r, angle) {
+  const rad = (angle - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+</script>
+</body>
+</html>
