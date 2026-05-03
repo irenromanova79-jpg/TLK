@@ -1371,7 +1371,11 @@ async function _doRefresh(manager, isAll) {
     try {
       const r = await fetch(url(sheetName), {mode:'cors', signal:ctrl.signal});
       clearTimeout(timer);
-      return r.ok ? await r.text() : null;
+      if (!r.ok) return null;
+      const text = await r.text();
+      // Если Google вернул HTML вместо CSV — лист не найден или нет доступа
+      if (text.trim().startsWith('<') || text.includes('<!DOCTYPE')) return null;
+      return text;
     } catch(e) { clearTimeout(timer); return null; }
   };
 
@@ -1379,19 +1383,19 @@ async function _doRefresh(manager, isAll) {
 
   // Все три листа параллельно
   const [csv1, csv2, csv3] = await Promise.all([
-    safeFetch('Реестр копия'),
+    safeFetch('реестр (копия)'),
     safeFetch('Реестр план'),
-    safeFetch('Реестр оплат подрядчику')
+    safeFetch('реестр оплат подрядчику')
   ]);
 
   if (csv1) { const n = parseRegistryCSV(csv1, manager); results.push(`📋 Реестр: ${n} строк`); }
-  else errors.push('Реестр копия');
+  else errors.push('реестр (копия)');
 
   if (csv2) { const n = parsePlanCSV(csv2); results.push(`📊 Планы: ${n} записей`); }
   else errors.push('Реестр план');
 
   if (csv3) { const n = parseContractorCSV(csv3); results.push(`🔧 Подрядчики: ${n} записей`); }
-  else errors.push('Реестр оплат подрядчику');
+  else errors.push('реестр оплат подрядчику');
 
   lastUpdate = new Date();
   const msg = results.length
