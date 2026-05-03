@@ -571,7 +571,7 @@ function buildManagerDash(manager) {
 
   // Top companies bar chart
   const byComp = {};
-  rows.filter(r=>r.company).forEach(r => { byComp[r.company]=(byComp[r.company]||0)+r.fact_ds; });
+  rows.filter(r=>r.company && !SKIP_COMPANIES.has(r.company)).forEach(r => { byComp[r.company]=(byComp[r.company]||0)+r.fact_ds; });
   const topComp = Object.entries(byComp).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,12);
   const maxComp = topComp[0]?.[1] || 1;
 
@@ -870,7 +870,7 @@ function buildDirectorOverview() {
 
   // ── top companies (payments) ──
   const topMap={};
-  allRows.filter(r=>r.company&&r.fact_ds>0).forEach(r=>{topMap[r.company]=(topMap[r.company]||0)+r.fact_ds});
+  allRows.filter(r=>r.company&&r.fact_ds>0&&!SKIP_COMPANIES.has(r.company)).forEach(r=>{topMap[r.company]=(topMap[r.company]||0)+r.fact_ds});
   const topArr = Object.entries(topMap).sort((a,b)=>b[1]-a[1]).slice(0,18);
   const topMax = topArr[0]?.[1]||1;
 
@@ -1509,13 +1509,15 @@ function parseContractorCSV(csv) {
 }
 
 const MANAGERS_LIST = ['Александров С','Мартынов А','Синчагова С'];
+// Заголовочные значения которые нужно пропускать
+const SKIP_COMPANIES = new Set(['Компания','компания','Company','Менеджер','Дата','']);
 
 function parseRegistryCSV(csv, manager) {
-  // Реальная структура "реестр (копия)" (из скриншота):
-  // col[0]=A номер | col[1]=B дата | col[2]=C тип клиента | col[3]=D компания
-  // col[4]=E Сумма заявки (план) | col[5]=F Размер поступления (факт ДС)
-  // col[6]=G дата оплаты | col[7]=H месяц платежа | col[8]=I Менеджер
-  // col[9]=J долг | col[10]=K статус счета | col[11]=L статус оплаты | col[12]=M лаборатория
+  // Структура "реестр (копия)":
+  // col[0]=A(№) col[1]=B(Дата DD.MM.YYYY) col[2]=C(тип) col[3]=D(компания)
+  // col[4]=E(Сумма заявки=план) col[5]=F(Сумма платежа=факт ДС)
+  // col[6]=G(дата оплаты) col[7]=H(месяц) col[8]=I(менеджер)
+  // col[9]=J(долг) col[10]=K(счет) col[11]=L(статус) col[12]=M(лаб)
   const lines = csv.split('\n').filter(l => l.trim());
   const mgrs = manager ? [manager] : MANAGERS_LIST;
   let updated = 0;
@@ -1532,39 +1534,43 @@ function parseRegistryCSV(csv, manager) {
   });
 
   const pa = s => parseFloat((s||'').replace(/\s/g,'').replace(',','.')) || 0;
+  // Паттерн даты: DD.MM.YYYY (строго 2-2-4 цифры)
+  const DATE_RE = /^\d{2}\.\d{2}\.(20\d{2})$/;
 
   lines.forEach(line => {
     const cols = parseCSVLine(line);
-    if (cols.length < 10) return;
+    if (cols.length < 9) return;
 
-    // Менеджер — динамически ищем в строке (обычно col[8])
-    const mgrIdx = cols.findIndex(c => mgrs.includes(c.trim()));
+    // Дата ДОЛЖНА быть в col[1] формата DD.MM.YYYY с годом 20xx
+    const dateStr = (cols[1]||'').trim();
+    if (!DATE_RE.test(dateStr)) return; // пропускаем заголовки и мусор
+
+    const parts = dateStr.split('.');
+    const moIdx = parseInt(parts[1]) - 1;
+    const yr    = parts[2];
+    if (moIdx < 0 || moIdx > 11) return;
+    const moStr = String(moIdx + 1).padStart(2,'0');
+
+    // Менеджер — ищем только в колонках 6-15 чтобы не схватить случайное совпадение
+    let mgrIdx = -1;
+    for (let i = 6; i <= Math.min(15, cols.length-1); i++) {
+      if (mgrs.includes(cols[i].trim())) { mgrIdx = i; break; }
+    }
     if (mgrIdx < 0) return;
     const mgr = cols[mgrIdx].trim();
 
-    // Дата — col[1] (DD.MM.YYYY)
-    const dateStr = (cols[1]||'').trim();
-    const parts = dateStr.split('.');
-    if (parts.length !== 3) return;
-    const moIdx = parseInt(parts[1]) - 1;
-    if (moIdx < 0 || moIdx > 11) return;
-    const yr = parts[2].trim();
-    if (!yr.match(/^\d{4}$/)) return;
-    const moStr = String(moIdx + 1).padStart(2,'0');
-
-    // Компания — col[3] = mgrIdx - 5
     const company = (cols[mgrIdx - 5]||'').trim();
+    if (SKIP_COMPANIES.has(company)) return; // пропускаем заголовочные строки
 
-    // Суммы — col[4]=план (Сумма заявки), col[5]=факт (Размер поступления)
-    // Относительно mgrIdx: plan = mgrIdx-4, fact = mgrIdx-3
+    // col[4]=E = Сумма заявки (план/счёт)
+    // col[5]=F = Размер поступления (факт — реальный платёж)
     const plan_orders = pa(cols[mgrIdx - 4]);  // E = Сумма заявки
     const fact_ds     = pa(cols[mgrIdx - 3]);  // F = Размер поступления
     const debt        = pa(cols[mgrIdx + 1]);  // J = Долг
     const status      = (cols[mgrIdx + 3]||'').trim(); // L = Статус оплаты
-    const contractor  = 0; // из отдельного листа "Реестр оплат подрядчику"
 
     REGISTRY.push({ year:yr, month:moStr, date:dateStr, company, manager:mgr,
-      plan_orders, fact_ds, debt, status, contractor });
+      plan_orders, fact_ds, debt, status, contractor:0 });
 
     if (!MONTHLY_DYN[mgr][yr]) MONTHLY_DYN[mgr][yr] = {orders:Array(12).fill(0),payments:Array(12).fill(0)};
     MONTHLY_DYN[mgr][yr].orders[moIdx]   += plan_orders;
